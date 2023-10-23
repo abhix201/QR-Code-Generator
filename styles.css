@@ -7,6 +7,14 @@
 body {
 	zoom: 120%;
 }
+
+/* Define styles for smaller screens */
+@media (max-width: 768px) {
+  body {
+    zoom: 100%; /* Reset zoom for smaller screens */
+  }
+}
+
 .container {
 	text-align: center;
 }
