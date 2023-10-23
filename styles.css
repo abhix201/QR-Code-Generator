@@ -4,7 +4,9 @@
 	padding: 0;
 	box-sizing: border-box;
 }
-
+body {
+	zoom: 120%;
+}
 .container {
 	text-align: center;
 }
