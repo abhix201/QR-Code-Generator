@@ -12,7 +12,7 @@ function handleSubmit(event) {
 	// Show the download button
 	downloadLink.style.display = "block";
   }
-  //With these changes, the "Download QR Code" button will trigger a direct download of the generated QR code image with the filename "qrcode.png" when clicked.
+
   
   
   
