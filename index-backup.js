@@ -4,11 +4,18 @@
 
 class QRCodeGenerator {
     constructor() {
-        this.initializeElements();
-        this.bindEvents();
-        this.setupKeyboardShortcuts();
-        this.currentQRData = null;
-        this.currentQRUrl = null;
+        try {
+            console.log('Initializing QR Code Generator v2.0.1...');
+            this.initializeElements();
+            this.bindEvents();
+            this.setupKeyboardShortcuts();
+            this.currentQRData = null;
+            this.currentQRUrl = null;
+            console.log('QR Code Generator initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize QR Code Generator:', error);
+            alert('Error initializing app. Please refresh the page.');
+        }
     }
 
     /**
@@ -19,12 +26,29 @@ class QRCodeGenerator {
         this.input = document.getElementById('qr-input');
         this.clearBtn = document.getElementById('clear-btn');
         this.sizeSelect = document.getElementById('size-select');
-        this.formatSelect = document.getElementById('format-select');
         this.errorCorrectionSelect = document.getElementById('error-correction');
+        this.foregroundColorInput = document.getElementById('foreground-color');
+        this.backgroundColorInput = document.getElementById('background-color');
+        this.marginSelect = document.getElementById('margin-size');
+        this.styleSelect = document.getElementById('style-select');
 
         // Form and buttons
         this.form = document.querySelector('.qr-form');
         this.generateBtn = document.getElementById('generate-btn');
+        
+        // Check for critical elements
+        const criticalElements = {
+            'qr-input': this.input,
+            'generate-btn': this.generateBtn,
+            'qr-form': this.form
+        };
+        
+        for (const [name, element] of Object.entries(criticalElements)) {
+            if (!element) {
+                console.error(`Critical element missing: ${name}`);
+                throw new Error(`Missing element: ${name}`);
+            }
+        }
 
         // Display elements
         this.loadingSpinner = document.getElementById('loading-spinner');
@@ -39,6 +63,9 @@ class QRCodeGenerator {
         this.shareBtn = document.getElementById('share-btn');
         this.copyBtn = document.getElementById('copy-btn');
         this.previewBtn = document.getElementById('preview-btn');
+        
+        // Debug button
+        this.debugBtn = document.getElementById('debug-btn');
 
         // Modal elements
         this.previewModal = document.getElementById('preview-modal');
@@ -66,6 +93,9 @@ class QRCodeGenerator {
         // Clear button
         this.clearBtn.addEventListener('click', () => this.clearInput());
 
+        // Debug button
+        this.debugBtn.addEventListener('click', () => this.debugAndClearCache());
+
         // Action buttons
         this.downloadBtn.addEventListener('click', () => this.downloadQR());
         this.shareBtn.addEventListener('click', () => this.shareQR());
@@ -78,8 +108,11 @@ class QRCodeGenerator {
 
         // Settings change
         this.sizeSelect.addEventListener('change', () => this.regenerateIfNeeded());
-        this.formatSelect.addEventListener('change', () => this.regenerateIfNeeded());
         this.errorCorrectionSelect.addEventListener('change', () => this.regenerateIfNeeded());
+        this.foregroundColorInput.addEventListener('change', () => this.regenerateIfNeeded());
+        this.backgroundColorInput.addEventListener('change', () => this.regenerateIfNeeded());
+        this.marginSelect.addEventListener('change', () => this.regenerateIfNeeded());
+        this.styleSelect.addEventListener('change', () => this.regenerateIfNeeded());
     }
 
     /**
@@ -140,7 +173,7 @@ class QRCodeGenerator {
     }
 
     /**
-     * Generate QR code
+     * Generate QR code using client-side library
      */
     async generateQR(showSuccess = true) {
         const inputText = this.input.value.trim();
@@ -151,38 +184,71 @@ class QRCodeGenerator {
         }
 
         try {
+            // Check if QRCode library is loaded
+            if (typeof QRCode === 'undefined') {
+                throw new Error('QR code library is not loaded. Please refresh the page and try again.');
+            }
+
             this.showLoading();
             this.hideError();
             this.hideResult();
 
             // Get settings
-            const size = this.sizeSelect.value;
-            const format = this.formatSelect.value;
+            const size = parseInt(this.sizeSelect.value);
             const errorCorrection = this.errorCorrectionSelect.value;
+            const foregroundColor = this.foregroundColorInput.value;
+            const backgroundColor = this.backgroundColorInput.value;
+            const margin = parseInt(this.marginSelect.value);
 
-            // Process and encode the input
+            // Process the input
             const processedText = this.preprocessInput(inputText);
-            const encodedText = this.smartEncode(processedText);
 
-            // Build QR API URL with parameters
-            const qrUrl = this.buildQRUrl(encodedText, size, format, errorCorrection);
+            // Generate QR code options
+            const qrOptions = {
+                width: size,
+                height: size,
+                margin: margin,
+                color: {
+                    dark: foregroundColor,
+                    light: backgroundColor
+                },
+                errorCorrectionLevel: this.mapErrorCorrectionLevel(errorCorrection),
+                type: 'image/png',
+                quality: 0.92
+            };
 
-            // Test if the API is accessible
-            await this.testQRGeneration(qrUrl);
+            // Generate QR code as data URL
+            const qrDataUrl = await QRCode.toDataURL(processedText, qrOptions);
 
             // Update current data
             this.currentQRData = processedText;
-            this.currentQRUrl = qrUrl;
+            this.currentQRUrl = qrDataUrl;
+            this.currentQRBlob = await this.dataURLtoBlob(qrDataUrl);
 
             // Display the QR code
-            await this.displayQR(qrUrl, processedText);
+            await this.displayQR(qrDataUrl, processedText);
 
             if (showSuccess) {
                 this.showSuccess();
             }
 
         } catch (error) {
-            this.handleError(error);
+            console.error('QR Generation Error:', error);
+            
+            // Provide more specific error messages
+            let errorMessage = 'Failed to generate QR code.';
+            
+            if (error.message.includes('too long') || inputText.length > 2000) {
+                errorMessage = 'The text is too long for QR code generation. Please use shorter text or URL.';
+            } else if (error.message.includes('invalid') || error.message.includes('encode')) {
+                errorMessage = 'The text contains characters that cannot be encoded in a QR code. Please check your input.';
+            } else if (this.isUrl(inputText)) {
+                errorMessage = 'Unable to generate QR code for this URL. Please verify the URL is correct and try again.';
+            } else {
+                errorMessage = 'Failed to generate QR code. Please check your input and try again.';
+            }
+            
+            this.handleError(new Error(errorMessage));
         } finally {
             this.hideLoading();
         }
@@ -225,7 +291,9 @@ class QRCodeGenerator {
 
         // URL detection and formatting
         if (this.isUrl(text)) {
-            return this.formatUrl(text);
+            const formattedUrl = this.formatUrl(text);
+            // Ensure the URL is properly encoded for QR generation
+            return this.sanitizeUrlForQR(formattedUrl);
         }
 
         // SMS detection
@@ -238,45 +306,62 @@ class QRCodeGenerator {
     }
 
     /**
-     * Smart encoding for different data types
+     * Map error correction level to QRCode.js format
      */
-    smartEncode(text) {
-        // For URLs, we want to preserve them as-is for QR codes
-        // URLs don't need to be encoded for QR codes - they should be readable as URLs
-        if (this.isUrl(text) || text.startsWith('mailto:') || text.startsWith('tel:') || text.startsWith('sms:')) {
-            return text; // Don't encode URLs, emails, phone numbers, SMS
+    mapErrorCorrectionLevel(level) {
+        const mapping = {
+            'low': 'L',
+            'medium': 'M', 
+            'quartile': 'Q',
+            'high': 'H'
+        };
+        return mapping[level.toLowerCase()] || 'M';
+    }
+
+    /**
+     * Sanitize URL for QR code generation
+     * Handles special characters that might cause issues
+     */
+    sanitizeUrlForQR(url) {
+        try {
+            // For QR codes, we want to preserve the original URL structure
+            // but ensure it's a valid URL format
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                // If it's already a complete URL, validate and return
+                const urlObj = new URL(url);
+                return urlObj.href;
+            } else {
+                // If it's not a complete URL, add https:// and validate
+                const fullUrl = `https://${url}`;
+                const urlObj = new URL(fullUrl);
+                return urlObj.href;
+            }
+        } catch (error) {
+            // If URL parsing fails, return the original text
+            // The QR library will handle it as plain text
+            console.warn('URL parsing failed, treating as plain text:', error);
+            return url;
         }
-        
-        // For plain text that might contain special characters, encode it
-        return encodeURIComponent(text);
     }
 
     /**
-     * Build QR API URL
+     * Convert data URL to Blob for download
      */
-    buildQRUrl(dataText, size, format, errorCorrection) {
-        const baseUrl = 'https://api.qrserver.com/v1/create-qr-code/';
-        const params = new URLSearchParams({
-            data: dataText,
-            size: size,
-            format: format,
-            ecc: errorCorrection,
-            margin: '10'
-        });
-
-        return `${baseUrl}?${params.toString()}`;
+    async dataURLtoBlob(dataURL) {
+        const response = await fetch(dataURL);
+        return response.blob();
     }
 
     /**
-     * Test QR generation (check if API is accessible)
+     * Generate filename for download
      */
-    async testQRGeneration(url) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve();
-            img.onerror = () => reject(new Error('Failed to generate QR code. Please check your internet connection.'));
-            img.src = url;
-        });
+    generateFilename() {
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const sanitizedData = this.currentQRData
+            .replace(/[^a-z0-9]/gi, '_')
+            .substring(0, 20)
+            .toLowerCase();
+        return `qr_${sanitizedData}_${timestamp}.png`;
     }
 
     /**
@@ -298,16 +383,12 @@ class QRCodeGenerator {
      * Download QR code
      */
     async downloadQR() {
-        if (!this.currentQRUrl) return;
+        if (!this.currentQRBlob) return;
 
         try {
-            const response = await fetch(this.currentQRUrl);
-            const blob = await response.blob();
+            const filename = this.generateFilename();
             
-            const format = this.formatSelect.value;
-            const filename = `qrcode-${Date.now()}.${format}`;
-            
-            const url = window.URL.createObjectURL(blob);
+            const url = window.URL.createObjectURL(this.currentQRBlob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
@@ -318,6 +399,7 @@ class QRCodeGenerator {
 
             this.showTemporaryMessage('QR code downloaded successfully! 📥', 'success');
         } catch (error) {
+            console.error('Download error:', error);
             this.showTemporaryMessage('Failed to download QR code. Please try again.', 'error');
         }
     }
@@ -326,15 +408,22 @@ class QRCodeGenerator {
      * Share QR code
      */
     async shareQR() {
-        if (!this.currentQRUrl || !this.currentQRData) return;
+        if (!this.currentQRBlob || !this.currentQRData) return;
 
-        if (navigator.share) {
+        if (navigator.share && navigator.canShare) {
             try {
-                await navigator.share({
-                    title: 'QR Code',
-                    text: `Check out this QR code for: ${this.currentQRData}`,
-                    url: this.currentQRUrl
-                });
+                const filename = this.generateFilename();
+                const file = new File([this.currentQRBlob], filename, { type: 'image/png' });
+                
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'QR Code',
+                        text: `QR code for: ${this.currentQRData}`,
+                        files: [file]
+                    });
+                } else {
+                    this.fallbackShare();
+                }
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     this.fallbackShare();
@@ -349,11 +438,11 @@ class QRCodeGenerator {
      * Fallback share method
      */
     fallbackShare() {
-        const shareText = `Check out this QR code: ${this.currentQRUrl}`;
+        const shareText = `Check out this QR code for: ${this.currentQRData}`;
         
         if (navigator.clipboard) {
             navigator.clipboard.writeText(shareText).then(() => {
-                this.showTemporaryMessage('Share link copied to clipboard! 📋', 'success');
+                this.showTemporaryMessage('QR code info copied to clipboard! 📋', 'success');
             });
         } else {
             // Fallback for older browsers
@@ -363,28 +452,28 @@ class QRCodeGenerator {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            this.showTemporaryMessage('Share link copied to clipboard! 📋', 'success');
+            this.showTemporaryMessage('QR code info copied to clipboard! 📋', 'success');
         }
     }
 
     /**
-     * Copy QR link to clipboard
+     * Copy QR data to clipboard
      */
     async copyQRLink() {
-        if (!this.currentQRUrl) return;
+        if (!this.currentQRData) return;
 
         try {
-            await navigator.clipboard.writeText(this.currentQRUrl);
-            this.showTemporaryMessage('QR code link copied to clipboard! 📋', 'success');
+            await navigator.clipboard.writeText(this.currentQRData);
+            this.showTemporaryMessage('QR code data copied to clipboard! 📋', 'success');
         } catch (error) {
             // Fallback for older browsers
             const textArea = document.createElement('textarea');
-            textArea.value = this.currentQRUrl;
+            textArea.value = this.currentQRData;
             document.body.appendChild(textArea);
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            this.showTemporaryMessage('QR code link copied to clipboard! 📋', 'success');
+            this.showTemporaryMessage('QR code data copied to clipboard! 📋', 'success');
         }
     }
 
@@ -418,6 +507,7 @@ class QRCodeGenerator {
         this.hideSuccess();
         this.currentQRData = null;
         this.currentQRUrl = null;
+        this.currentQRBlob = null;
         
         // Clear any pending auto-generation
         clearTimeout(this.autoGenerateTimeout);
@@ -455,8 +545,8 @@ class QRCodeGenerator {
             try {
                 new URL(`https://${text}`);
                 // Additional checks for common URL patterns
+                // Allow spaces in URLs as they will be encoded
                 return text.includes('.') && 
-                       !text.includes(' ') && 
                        text.length > 3 &&
                        !text.startsWith('.');
             } catch {
@@ -481,6 +571,43 @@ class QRCodeGenerator {
 
     truncateText(text, maxLength) {
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    /**
+     * Debug and clear cache
+     */
+    async debugAndClearCache() {
+        console.log('=== DEBUG INFO ===');
+        console.log('App Version:', window.APP_VERSION || 'Unknown');
+        console.log('QRCode Library Available:', typeof QRCode !== 'undefined');
+        console.log('Input Element:', !!this.input);
+        console.log('Form Element:', !!this.form);
+        console.log('Generate Button:', !!this.generateBtn);
+        console.log('Current Input Value:', this.input ? this.input.value : 'N/A');
+        
+        // Test QR generation
+        if (typeof QRCode !== 'undefined') {
+            try {
+                await QRCode.toDataURL('Test');
+                console.log('QR Library Test: SUCCESS');
+            } catch (e) {
+                console.log('QR Library Test: FAILED -', e.message);
+            }
+        }
+        
+        // Clear cache
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            console.log('Clearing caches:', cacheNames);
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        
+        // Clear local storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        console.log('Cache cleared. Reloading...');
+        window.location.reload(true);
     }
 
     /**
@@ -655,10 +782,7 @@ function dismissUpdate() {
     }
 }
 
-// Initialize the QR Code Generator when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new QRCodeGenerator();
-});
+// QRCodeGenerator class is now initialized from HTML after library loads
 
 // Legacy function for backward compatibility
 function handleSubmit(event) {

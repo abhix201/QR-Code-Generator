@@ -29,7 +29,13 @@
     <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📱%3C/text%3E%3C/svg%3E">
     
-    <link rel="stylesheet" href="styles.css">
+    <!-- Cache busting for CSS and JS -->
+    <link rel="stylesheet" href="styles.css?v=2.0.1">
+    
+    <!-- Force cache clear -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>QR Code Generator - Create QR Codes Instantly</title>
 </head>
 
@@ -54,7 +60,7 @@
                     <p>Enter any text, URL, phone number, or message below</p>
                 </div>
                 
-                <form class="qr-form" onsubmit="handleSubmit(event)" novalidate>
+                <form class="qr-form" novalidate>
                     <div class="input-group">
                         <label for="qr-input" class="sr-only">Enter text or URL for QR code</label>
                         <div class="input-wrapper">
@@ -74,6 +80,11 @@
                             💡 Try: URLs, phone numbers (+1234567890), email addresses, or plain text
                         </div>
                         <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
+                        
+                        <!-- Debug and cache clear button -->
+                        <button type="button" id="debug-btn" style="margin-top: 10px; padding: 5px 10px; background: #ff6b6b; color: white; border: none; border-radius: 4px; font-size: 12px;">
+                            🔧 Debug & Clear Cache
+                        </button>
                     </div>
                     
                     <div class="options-group">
@@ -82,30 +93,51 @@
                             <div class="option">
                                 <label for="size-select">Size</label>
                                 <select id="size-select">
-                                    <option value="200x200">Small (200×200)</option>
-                                    <option value="300x300" selected>Medium (300×300)</option>
-                                    <option value="400x400">Large (400×400)</option>
-                                    <option value="500x500">Extra Large (500×500)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="option">
-                                <label for="format-select">Format</label>
-                                <select id="format-select">
-                                    <option value="png" selected>PNG</option>
-                                    <option value="jpg">JPG</option>
-                                    <option value="gif">GIF</option>
-                                    <option value="svg">SVG</option>
+                                    <option value="200">Small (200×200)</option>
+                                    <option value="300" selected>Medium (300×300)</option>
+                                    <option value="400">Large (400×400)</option>
+                                    <option value="500">Extra Large (500×500)</option>
+                                    <option value="600">Huge (600×600)</option>
                                 </select>
                             </div>
                             
                             <div class="option">
                                 <label for="error-correction">Error Correction</label>
                                 <select id="error-correction">
-                                    <option value="L">Low (~7%)</option>
-                                    <option value="M" selected>Medium (~15%)</option>
-                                    <option value="Q">Quartile (~25%)</option>
-                                    <option value="H">High (~30%)</option>
+                                    <option value="low">Low (~7%)</option>
+                                    <option value="medium" selected>Medium (~15%)</option>
+                                    <option value="quartile">Quartile (~25%)</option>
+                                    <option value="high">High (~30%)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="option">
+                                <label for="foreground-color">QR Color</label>
+                                <input type="color" id="foreground-color" value="#000000">
+                            </div>
+                            
+                            <div class="option">
+                                <label for="background-color">Background</label>
+                                <input type="color" id="background-color" value="#ffffff">
+                            </div>
+                            
+                            <div class="option">
+                                <label for="margin-size">Margin</label>
+                                <select id="margin-size">
+                                    <option value="1">Minimal</option>
+                                    <option value="2">Small</option>
+                                    <option value="4" selected>Medium</option>
+                                    <option value="6">Large</option>
+                                    <option value="8">Extra Large</option>
+                                </select>
+                            </div>
+                            
+                            <div class="option">
+                                <label for="style-select">Style</label>
+                                <select id="style-select">
+                                    <option value="square" selected>Square</option>
+                                    <option value="rounded">Rounded</option>
+                                    <option value="dots">Dots</option>
                                 </select>
                             </div>
                         </div>
@@ -205,7 +237,83 @@
         </div>
     </footer>
     
-    <script src="index.js"></script>
+    <!-- QR Code Generation Library - Load first with fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" 
+            onerror="loadQRCodeFallback()"></script>
+    
+    <script>
+        // Fallback CDN loader
+        function loadQRCodeFallback() {
+            console.warn('Primary CDN failed, trying fallback...');
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+            script.onerror = () => {
+                console.error('All CDNs failed!');
+                alert('Unable to load QR Code library. Please check your internet connection and try again.');
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Function to check if QRCode library is loaded
+        function waitForQRCode() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max wait
+                
+                function check() {
+                    attempts++;
+                    if (typeof QRCode !== 'undefined') {
+                        console.log('QRCode library loaded successfully');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.error('QRCode library failed to load after 5 seconds');
+                        reject(new Error('QRCode library failed to load'));
+                    } else {
+                        console.log('Waiting for QRCode library... attempt', attempts);
+                        setTimeout(check, 100);
+                    }
+                }
+                check();
+            });
+        }
+
+        // Initialize app only after QRCode is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('DOM loaded, waiting for QRCode library...');
+                await waitForQRCode();
+                
+                // Clear cache
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.unregister();
+                        }
+                    });
+                }
+                
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                
+                window.APP_VERSION = '2.0.1';
+                
+                // Now initialize the QR Generator
+                console.log('Initializing QR Code Generator...');
+                new QRCodeGenerator();
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                alert('Failed to load QR Code library. Please check your internet connection and refresh the page.');
+            }
+        });
+    </script>
+    
+    <!-- Main JavaScript - Load after library check -->
+    <script src="index.js?v=2.0.1"></script>
 </body>
 
 </html>

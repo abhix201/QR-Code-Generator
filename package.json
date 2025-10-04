@@ -1,0 +1,81 @@
+{
+    "name": "qr-code-generator",
+    "version": "2.0.0",
+    "description": "A modern, feature-rich QR code generator with beautiful UI and advanced functionality",
+    "main": "index.html",
+    "scripts": {
+        "start": "serve -s . -l 8000",
+        "dev": "live-server --port=3000 --open=index.html",
+        "serve": "http-server . -p 8080 -o -c-1",
+        "preview": "serve -s . -l 5000",
+        "build": "echo 'No build process needed for vanilla HTML/CSS/JS'",
+        "test": "echo 'No tests specified yet'",
+        "lint": "npm run lint:js && npm run lint:css",
+        "lint:css": "stylelint styles.css",
+        "lint:js": "eslint index.js",
+        "lint:fix": "eslint index.js --fix && stylelint styles.css --fix",
+        "format": "prettier --write *.html *.css *.js *.md",
+        "format:check": "prettier --check *.html *.css *.js *.md",
+        "validate": "npm run lint && npm run format:check",
+        "deploy": "echo 'Add your deployment script here'",
+        "clean": "echo 'Cleaning cache...' && npm cache clean --force"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/abhix201/QR-Code-Generator.git"
+    },
+    "keywords": [
+        "qr-code",
+        "generator",
+        "qr",
+        "barcode",
+        "web-app",
+        "javascript",
+        "html5",
+        "css3",
+        "responsive",
+        "pwa",
+        "mobile-friendly",
+        "accessibility",
+        "modern-ui"
+    ],
+    "author": {
+        "name": "Abhijeet Gupta",
+        "email": "contact@abhijeetgupta0120.me",
+        "url": "https://abhijeet-gupta-portfolio.appwrite.network/"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/abhix201/QR-Code-Generator/issues"
+    },
+    "homepage": "https://abhijeet-gupta-portfolio.appwrite.network/",
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not dead",
+        "not ie 11"
+    ],
+    "devDependencies": {
+        "eslint": "^8.57.0",
+        "prettier": "^3.0.3",
+        "stylelint": "^15.11.0",
+        "stylelint-config-standard": "^34.0.0",
+        "serve": "^14.2.1",
+        "live-server": "^1.2.2",
+        "http-server": "^14.1.1"
+    },
+    "files": [
+        "index.html",
+        "styles.css",
+        "index.js",
+        "README.md",
+        "LICENSE"
+    ],
+    "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/abhix201"
+    }
+}
