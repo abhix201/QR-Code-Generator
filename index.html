@@ -1,211 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Generate QR codes instantly for URLs, text, phone numbers, and more. Free, fast, and easy-to-use QR code generator with modern design.">
-    <meta name="keywords" content="QR code generator, QR code, generator, URL to QR, text to QR, free QR generator">
-    <meta name="author" content="Abhijeet Gupta">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="QR Code Generator - Create QR Codes Instantly">
-    <meta property="og:description" content="Generate QR codes instantly for URLs, text, phone numbers, and more. Free, fast, and easy-to-use.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://abhijeet-gupta-portfolio.appwrite.network/">
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="QR Code Generator">
-    <meta name="twitter:description" content="Generate QR codes instantly for URLs, text, phone numbers, and more.">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📱%3C/text%3E%3C/svg%3E">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📱%3C/text%3E%3C/svg%3E">
-    
-    <link rel="stylesheet" href="styles.css">
-    <title>QR Code Generator - Create QR Codes Instantly</title>
-</head>
-
-<body>
-    <div class="background-animation"></div>
-    
-    <header class="header">
-        <div class="container">
-            <h1 class="logo">
-                <span class="logo-icon">📱</span>
-                QR Generator
-            </h1>
-            <p class="tagline">Create beautiful QR codes in seconds</p>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div class="container">
-            <div class="generator-card">
-                <div class="card-header">
-                    <h2>Generate Your QR Code</h2>
-                    <p>Enter any text, URL, phone number, or message below</p>
-                </div>
-                
-                <form class="qr-form" onsubmit="handleSubmit(event)" novalidate>
-                    <div class="input-group">
-                        <label for="qr-input" class="sr-only">Enter text or URL for QR code</label>
-                        <div class="input-wrapper">
-                            <input 
-                                id="qr-input" 
-                                type="text" 
-                                autocomplete="off" 
-                                placeholder="Enter URL, text, phone number, or any message..."
-                                aria-describedby="input-help error-message"
-                                required
-                            >
-                            <button type="button" class="clear-btn" id="clear-btn" aria-label="Clear input">
-                                <span>✕</span>
-                            </button>
-                        </div>
-                        <div id="input-help" class="input-help">
-                            💡 Try: URLs, phone numbers (+1234567890), email addresses, or plain text
-                        </div>
-                        <div id="error-message" class="error-message" role="alert" aria-live="polite"></div>
-                    </div>
-                    
-                    <div class="options-group">
-                        <h3>Customize Your QR Code</h3>
-                        <div class="options-grid">
-                            <div class="option">
-                                <label for="size-select">Size</label>
-                                <select id="size-select">
-                                    <option value="200x200">Small (200×200)</option>
-                                    <option value="300x300" selected>Medium (300×300)</option>
-                                    <option value="400x400">Large (400×400)</option>
-                                    <option value="500x500">Extra Large (500×500)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="option">
-                                <label for="format-select">Format</label>
-                                <select id="format-select">
-                                    <option value="png" selected>PNG</option>
-                                    <option value="jpg">JPG</option>
-                                    <option value="gif">GIF</option>
-                                    <option value="svg">SVG</option>
-                                </select>
-                            </div>
-                            
-                            <div class="option">
-                                <label for="error-correction">Error Correction</label>
-                                <select id="error-correction">
-                                    <option value="L">Low (~7%)</option>
-                                    <option value="M" selected>Medium (~15%)</option>
-                                    <option value="Q">Quartile (~25%)</option>
-                                    <option value="H">High (~30%)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="generate-btn" id="generate-btn">
-                        <span class="btn-text">Generate QR Code</span>
-                        <span class="btn-icon">🚀</span>
-                    </button>
-                </form>
-                
-                <div class="loading-spinner" id="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Generating your QR code...</p>
-                </div>
-                
-                <div class="result-section" id="result-section">
-                    <div class="qr-display">
-                        <img id="qr-image" alt="Generated QR Code" />
-                        <div class="qr-overlay">
-                            <button class="preview-btn" id="preview-btn" aria-label="Preview QR Code">
-                                🔍 Preview
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="qr-info">
-                        <h3>Your QR Code is Ready!</h3>
-                        <p id="qr-data-preview">Scan this code to access your content</p>
-                        
-                        <div class="action-buttons">
-                            <button class="download-btn" id="download-btn">
-                                <span>📥 Download</span>
-                            </button>
-                            <button class="share-btn" id="share-btn">
-                                <span>📤 Share</span>
-                            </button>
-                            <button class="copy-btn" id="copy-btn">
-                                <span>📋 Copy Link</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="success-message" id="success-message">
-                    <span class="success-icon">✅</span>
-                    <span class="success-text">QR Code generated successfully!</span>
-                </div>
-            </div>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Instant Generation</h3>
-                    <p>Create QR codes in seconds with our lightning-fast generator</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎨</div>
-                    <h3>Customizable</h3>
-                    <p>Choose from multiple sizes, formats, and error correction levels</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>Mobile Friendly</h3>
-                    <p>Works perfectly on all devices - desktop, tablet, and mobile</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>Privacy Focused</h3>
-                    <p>Your data is processed securely and never stored on our servers</p>
-                </div>
-            </div>
-        </div>
-    </main>
-    
-    <div class="modal" id="preview-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>QR Code Preview</h3>
-                <button class="modal-close" id="modal-close" aria-label="Close preview">
-                    ✕
-                </button>
-            </div>
-            <div class="modal-body">
-                <img id="modal-qr-image" alt="QR Code Preview" />
-            </div>
-        </div>
-        <div class="modal-backdrop" id="modal-backdrop"></div>
-    </div>
-    
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 QR Code Generator. Made with ❤️ by <a href="https://abhijeet-gupta-portfolio.appwrite.network/" target="_blank" rel="noopener">Abhijeet Gupta</a></p>
-        </div>
-    </footer>
-    
-    <script src="index.js"></script>
-</body>
-
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>QR Code Generator: links, Wi-Fi, contacts and UPI</title>
+        <meta
+            name="description"
+            content="Make QR codes for links, Wi-Fi, contacts, UPI payments and more. Free, works offline, and nothing you type leaves your device."
+        />
+        <meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#121418" media="(prefers-color-scheme: dark)" />
+        <meta property="og:title" content="QR Code Generator" />
+        <meta
+            property="og:description"
+            content="Make QR codes for links, Wi-Fi, contacts and UPI payments. Private and free."
+        />
+        <meta property="og:type" content="website" />
+        <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    </head>
+    <body>
+        <div id="root"></div>
+        <noscript>This QR code generator needs JavaScript to run.</noscript>
+        <script type="module" src="/src/main.tsx"></script>
+    </body>
 </html>
