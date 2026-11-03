@@ -1,81 +1,64 @@
 {
-    "name": "qr-code-generator",
-    "version": "2.0.0",
-    "description": "A modern, feature-rich QR code generator with beautiful UI and advanced functionality",
-    "main": "index.html",
-    "scripts": {
-        "start": "serve -s . -l 8000",
-        "dev": "live-server --port=3000 --open=index.html",
-        "serve": "http-server . -p 8080 -o -c-1",
-        "preview": "serve -s . -l 5000",
-        "build": "echo 'No build process needed for vanilla HTML/CSS/JS'",
-        "test": "echo 'No tests specified yet'",
-        "lint": "npm run lint:js && npm run lint:css",
-        "lint:css": "stylelint styles.css",
-        "lint:js": "eslint index.js",
-        "lint:fix": "eslint index.js --fix && stylelint styles.css --fix",
-        "format": "prettier --write *.html *.css *.js *.md",
-        "format:check": "prettier --check *.html *.css *.js *.md",
-        "validate": "npm run lint && npm run format:check",
-        "deploy": "echo 'Add your deployment script here'",
-        "clean": "echo 'Cleaning cache...' && npm cache clean --force"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/abhix201/QR-Code-Generator.git"
-    },
-    "keywords": [
-        "qr-code",
-        "generator",
-        "qr",
-        "barcode",
-        "web-app",
-        "javascript",
-        "html5",
-        "css3",
-        "responsive",
-        "pwa",
-        "mobile-friendly",
-        "accessibility",
-        "modern-ui"
-    ],
-    "author": {
-        "name": "Abhijeet Gupta",
-        "email": "contact@abhijeetgupta0120.me",
-        "url": "https://abhijeet-gupta-portfolio.appwrite.network/"
-    },
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/abhix201/QR-Code-Generator/issues"
-    },
-    "homepage": "https://abhijeet-gupta-portfolio.appwrite.network/",
-    "engines": {
-        "node": ">=14.0.0"
-    },
-    "browserslist": [
-        "> 1%",
-        "last 2 versions",
-        "not dead",
-        "not ie 11"
-    ],
-    "devDependencies": {
-        "eslint": "^8.57.0",
-        "prettier": "^3.0.3",
-        "stylelint": "^15.11.0",
-        "stylelint-config-standard": "^34.0.0",
-        "serve": "^14.2.1",
-        "live-server": "^1.2.2",
-        "http-server": "^14.1.1"
-    },
-    "files": [
-        "index.html",
-        "styles.css",
-        "index.js",
-        "README.md",
-        "LICENSE"
-    ],
-    "funding": {
-        "type": "github",
-        "url": "https://github.com/sponsors/abhix201"
-    }
+  "name": "qr-code-generator",
+  "version": "3.0.0",
+  "private": true,
+  "description": "A fast, private QR code generator. Everything runs in your browser: URLs, Wi-Fi, contacts, UPI payments and more.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhix201/QR-Code-Generator.git"
+  },
+  "author": {
+    "name": "Abhijeet Gupta",
+    "email": "contact@abhijeetgupta0120.me",
+    "url": "https://abhijeet-gupta-portfolio.appwrite.network/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abhix201/QR-Code-Generator/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "qr-code-styling": "^1.9.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.14.0",
+    "jsdom": "^30.1.3",
+    "jsqr": "^1.4.0",
+    "prettier": "^3.9.10",
+    "sharp": "^0.35.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0"
+  }
 }
